@@ -51,7 +51,16 @@ canvas{
 		<option value="spray">Spray</option>
 	</select> 
 
-	<label for="workarea">DISPLAY 6x8" WORK AREA</label>
+	<label for="straight">STRAIGHT</label>
+	<input type="checkbox" name="straight" id="straight" onclick="toggle()"/>
+
+	<label for="ortho-h">ORTHO H</label>
+	<input type="checkbox" name="ortho-h" id="ortho-h" onclick="toggle()"/>
+
+	<label for="ortho-v">ORTHO V</label>
+	<input type="checkbox" name="ortho-v" id="ortho-v" onclick="toggle()"/>
+
+	<label for="workarea">DISPLAY 6x8" AREA</label>
 	<input type="checkbox" name="workarea" id="workarea" onclick="draw()"/>
 
 	<input type="submit" name="fullscreen" id="fullscreen" onclick="toggleFullScreen()" value="FULLSCREEN"/>
@@ -60,12 +69,19 @@ canvas{
 
 //TODO
 //
-//lines
-//arcs
-//pattern array
-//pockets?
-//fills?
+//ppi global variable
+//ortho straight
+//arc corners
 //
+//multi finger touch brush select
+//menu instructions help?
+//two finger tap display work area
+//pinch zoom
+//pattern array
+//pockets
+//fills
+//grid
+//gradient
 //
 
 var g = ""
@@ -78,6 +94,7 @@ var ts = 0
 var sketch = false
 var path
 var depth = -0.1
+var ppi = 72
 
 var min_depth = 1
 var max_depth = 1
@@ -203,7 +220,6 @@ else{
 	if((Math.max.apply(this,$.map(curve, function(o){ return o.y; })))>rymax){
 		rymax = Math.max.apply(this,$.map(curve, function(o){ return o.y; }))
 	}
-	
 }
 
 z=[]
@@ -299,7 +315,7 @@ smooth[smooth.length-1] = []
 		var Cx = Ax + (-5)*PNABx
 		var Cy = Ay + (-5)*PNABy
 
-	smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
+		smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
 
 
 		}
@@ -329,10 +345,18 @@ ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
 //work area
 
 if((document.getElementById("workarea").checked==true) && (smooth.length==0)){
+
+//	ymin = ctx.canvas.height/2-(4*125.37)
+//	ymax = ctx.canvas.height/2+(4*125.37)
+//	xmin = ctx.canvas.width/2-(3*125.37)
+//	xmax = ctx.canvas.width/2+(3*125.37)
+
 	ymin = ctx.canvas.height/2-(4*125.37)
 	ymax = ctx.canvas.height/2+(4*125.37)
 	xmin = ctx.canvas.width/2-(3*125.37)
 	xmax = ctx.canvas.width/2+(3*125.37)
+
+
 }
 
 else if ((document.getElementById("workarea").checked==false) && (smooth.length==0)){
@@ -341,7 +365,21 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length=
 	ymin = undefined
 	ymax = undefined 
 }
-else if ((document.getElementById("workarea").checked==true) && (smooth.length>0)){
+else if ((document.getElementById("workarea").checked==true) && (smooth.length==1)){
+
+	xmin = Math.min.apply(this,$.map(curve, function(o){ return o.x; }))
+	ymax = Math.max.apply(this,$.map(curve, function(o){ return o.y; }))
+	rxmax = Math.max.apply(this,$.map(curve, function(o){ return o.x; }))
+	rymin = Math.min.apply(this,$.map(curve, function(o){ return o.y; }))
+	rxmin=xmin
+	rymax=ymax
+
+	xmax = xmin+(6*125.37)
+	ymin = ymin-(8*125.37)
+
+}
+else if ((document.getElementById("workarea").checked==true) && (smooth.length>1)){
+
 	xmin = rxmin
 	ymax = rymax
 	xmax = xmin+(6*125.37)
@@ -355,6 +393,131 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length>
 }
 
 
+lines()
+
+/*
+ctx.beginPath()
+	ctx.fillStyle = "#fff000"
+	ctx.arc(xmin-10,ymax+10,2,0,2*Math.PI)
+ctx.fill()
+*/
+
+	ctx.lineWidth = 3
+	ctx.strokeStyle = "#fff"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.lineWidth = 1
+	ctx.strokeStyle = "#777"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.fillStyle='#aaa'
+	ctx.font = "14px Arial";
+	ctx.fillText((((xmax-xmin)/125.37)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	ctx.fillText((((ymax-ymin)/125.37)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
+
+}
+
+$("#myCanvas").bind('vmousedown', function(e) {
+    if ($('.inputContainer').data('open')== 'true'){    
+        $('.inputContainer').css('right', '-1000px');
+        $('.inputContainer').data('open', 'false');
+   }
+
+	ctx.beginPath();
+	ctx.lineWidth = 6;
+	ctx.moveTo(e.clientX,e.clientY)
+	sketch=true
+	points.push([])
+	ctx.strokeStyle = "#819FF7"
+	points[points.length-1].push({x:e.clientX,y:e.clientY})
+	
+	e.preventDefault()
+});
+
+$("#myCanvas").bind('vmousemove', function(e) {
+	if((sketch==true) && (typeof e.clientX != 'undefined')  && (document.getElementById("ortho-h").checked==false)  && (document.getElementById("ortho-v").checked==false) && (document.getElementById("straight").checked==false)) {
+		ctx.lineTo(e.clientX,e.clientY)
+	   points[points.length-1].push({x:e.clientX,y:e.clientY})
+	   ctx.stroke()
+	}
+	else if((sketch==true) && (typeof e.clientX != 'undefined') && (document.getElementById("ortho-h").checked==true)) {
+		ctx.lineTo(e.clientX,points[points.length-1][0].y)
+	   points[points.length-1].push({x:e.clientX,y:points[points.length-1][0].y})
+
+	   ctx.stroke()
+	}
+
+	else if((sketch==true) && (typeof e.clientX != 'undefined') && (document.getElementById("ortho-v").checked==true)) {
+		ctx.lineTo(points[points.length-1][0].x,e.clientY)
+	   points[points.length-1].push({x:points[points.length-1][0].x,y:e.clientY})
+	   ctx.stroke()
+	}
+
+	else if((sketch==true) && (typeof e.clientX != 'undefined') && (document.getElementById("straight").checked==true)) {
+
+		ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+		lines()
+		ctx.beginPath();
+		ctx.moveTo(points[points.length-1][0].x,points[points.length-1][0].y)
+		ctx.lineTo(e.clientX,e.clientY)
+		ctx.lineWidth = 6
+	   ctx.stroke()
+
+	}
+
+	e.preventDefault()
+});
+
+
+$("#myCanvas").bind('vmouseup', function(e) {
+	points[points.length-1].push({x:e.clientX,y:e.clientY})
+	sketch=false
+	makeSmooth()
+	e.preventDefault()
+});
+
+$( "#myCanvas" ).bind('tap', function(e) {
+	ts = e.timeStamp - ts
+	if(ts<250){
+		clear()
+	}
+	ts = e.timeStamp
+});
+
+$(window).on("orientationchange", function() {
+	draw()
+});
+
+
+$(window).resize(function(){
+	draw()
+}); 
+
+function clear(){
+	rxmin = undefined
+	rxmax = undefined
+	rymin = undefined
+	rymax = undefined
+   points=[]
+   smooth=[]
+   endpts=[]
+   connect=[]
+   draw()
+}
+
+function lines(){
+
+ctx.lineWidth = 1
 ctx.beginPath()
 ctx.fillStyle = "#E0E0F8"
 ctx.strokeStyle = "#ccc"
@@ -362,7 +525,7 @@ ctx.rect(xmin-10,ymin-10,xmax+20-xmin,ymax+20-ymin)
 ctx.fill()
 ctx.stroke()
 
-ctx.beginPath()
+ctx.lineWidth = 6
 ctx.lineJoin="round"
 ctx.lineCap="round"
 
@@ -410,6 +573,7 @@ for(i=0;i<smooth.length;i++){
 
 		}
 
+		ctx.lineWidth = 6
 }
 
 }
@@ -429,99 +593,9 @@ for(i=0;i<endpts.length;i++){
 	ctx.stroke()
 }
 
-/*
-ctx.beginPath()
-	ctx.fillStyle = "#fff000"
-	ctx.arc(xmin-10,ymax+10,2,0,2*Math.PI)
-ctx.fill()
-*/
-
-	ctx.lineWidth = 3
-	ctx.strokeStyle = "#fff"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.lineWidth = 1
-	ctx.strokeStyle = "#777"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.fillStyle='#aaa'
-	ctx.font = "14px Arial";
-	ctx.fillText((((xmax-xmin)/125.37)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	ctx.fillText((((ymax-ymin)/125.37)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
 
 }
 
-$("#myCanvas").bind('vmousedown', function(e) {
-    if ($('.inputContainer').data('open')== 'true'){    
-        $('.inputContainer').css('right', '-1000px');
-        $('.inputContainer').data('open', 'false');
-   }
-
-	ctx.beginPath();
-	ctx.lineWidth = 10;
-	ctx.moveTo(e.clientX,e.clientY)
-	sketch=true
-	points.push([])
-	ctx.strokeStyle = "#819FF7"
-	points[points.length-1].push({x:e.clientX,y:e.clientY})
-	e.preventDefault()
-});
-
-
-$("#myCanvas").bind('vmousemove', function(e) {
-	if((sketch==true) && (typeof e.clientX != 'undefined')) {
-		ctx.lineTo(e.clientX,e.clientY)
-	   points[points.length-1].push({x:e.clientX,y:e.clientY})
-	   ctx.stroke()
-	}
-	e.preventDefault()
-});
-
-
-$("#myCanvas").bind('vmouseup', function(e) {
-	sketch=false
-	makeSmooth()
-	e.preventDefault()
-});
-
-$( "#myCanvas" ).bind('tap', function(e) {
-	ts = e.timeStamp - ts
-	if(ts<250){
-		clear()
-	}
-	ts = e.timeStamp
-});
-
-$(window).on("orientationchange", function() {
-	draw()
-});
-
-
-$(window).resize(function(){
-	draw()
-}); 
-
-function clear(){
-	rxmin = undefined
-	rxmax = undefined
-	rymin = undefined
-	rymax = undefined
-   points=[]
-   smooth=[]
-   endpts=[]
-   connect=[]
-   draw()
-}
 
 function make(){
 
@@ -594,7 +668,7 @@ for(i=0;i<smooth.length;i++){
 g+="g0z0.25\n"
 g+="g4p0.5\n"
 g+="m5\n"
-g+="g0x" + ((xmax-xmin)/sf).toFixed(3) + "y" + ((ymax-ymin)/sf).toFixed(3) + "\n"
+g+="g0x" + ((rxmax-rxmin)/sf).toFixed(3) + "y" + ((rymax-rymin)/sf).toFixed(3) + "\n"
 g+="m30\n"
 
 //console.log(g)
@@ -621,7 +695,7 @@ $('.menu-icon').click(function(){
     }
 });
 
-function displayArea() {
+function toggle() {
 
 }
 
