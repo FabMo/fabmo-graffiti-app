@@ -46,12 +46,12 @@ canvas{
 	<input type="number" name="feedrate" id="feedrate" step="10" value="30" autocomplete="on"/>
 
 	<select id="brush">
-		<option value="smooth">Smooth Line</option>
-		<option value="perp">Perp Lines</option>
 		<option value="dots">Dots</option>
+		<option value="smooth">Line</option>
+		<option value="spray">Spray</option>
 	</select> 
 
-	<label for="workarea">DISPLAY FULL WORK AREA</label>
+	<label for="workarea">DISPLAY 6x8" WORK AREA</label>
 	<input type="checkbox" name="workarea" id="workarea" onclick="draw()"/>
 
 	<input type="submit" name="fullscreen" id="fullscreen" onclick="toggleFullScreen()" value="FULLSCREEN"/>
@@ -60,7 +60,6 @@ canvas{
 
 //TODO
 //
-//display work area button 6x8
 //lines
 //arcs
 //pattern array
@@ -207,8 +206,6 @@ else{
 	
 }
 
-
-
 z=[]
 
 for(i=0;i<smooth.length;i++){
@@ -239,10 +236,7 @@ zmin = Math.min.apply(this,$.map(z[i], function(o){ return o.z; }))
 
 //console.log(z)
 
-
-if(((document.getElementById("brush").value)=='dots') || ((document.getElementById("brush").value)=='perp')){
-	smooth[smooth.length-1]=simplify(smooth[smooth.length-1], 0.2, true)
-
+if(((document.getElementById("brush").value)=='dots') || ((document.getElementById("brush").value)=='spray')){
 
 	path="M" + smooth[smooth.length-1][0].x + " " + smooth[smooth.length-1][0].y + " "
 
@@ -252,25 +246,66 @@ if(((document.getElementById("brush").value)=='dots') || ((document.getElementBy
 
 	}
 
-smooth[smooth.length-1]=[]
+	smooth[smooth.length-1]=[]
 
-var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/10))).toFixed(2))
-console.log(l)
+	if((document.getElementById("brush").value)=='spray'){
+		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/5))).toFixed(3))
+	}
+	else{
+		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/10))).toFixed(3))
+	}
 
 
-for(i=0;i<=Snap.path.getTotalLength(path);i=i+l){
+	for(i=0;i<(Snap.path.getTotalLength(path).toFixed(0));i=(i+l)){
+		//console.log(i)
+		smooth[smooth.length-1].push({x:Snap.path.getPointAtLength(path, i).x,y:Snap.path.getPointAtLength(path, i).y})
 
-smooth[smooth.length-1].push({x:Snap.path.getPointAtLength(path, i).x,y:Snap.path.getPointAtLength(path, i).y})
+	}
+
+	smooth[smooth.length-1].push({x:Snap.path.getPointAtLength(path, Snap.path.getTotalLength(path)).x,y:Snap.path.getPointAtLength(path, Snap.path.getTotalLength(path)).y})
 
 }
 
-smooth[smooth.length-1].push({x:Snap.path.getPointAtLength(path, Snap.path.getTotalLength(path)).x,y:Snap.path.getPointAtLength(path, Snap.path.getTotalLength(path)).y})
-	
-console.log(smooth)
 
-}
-else if((document.getElementById("brush").value)=='perp'){
-//	smooth[smooth.length-1]=simplify(smooth[smooth.length-1], 0.3, true)
+if((document.getElementById("brush").value)=='spray'){
+
+curve = smooth[smooth.length-1]
+
+//console.log(curve)
+
+smooth[smooth.length-1] = []
+
+		for(j=0;j<curve.length-1;j++){
+
+		var Ax = curve[j].x
+		var Ay = curve[j].y
+		var Bx = curve[j+1].x
+		var By = curve[j+1].y
+
+		var ABx =  Bx - Ax
+		var ABy =  By - Ay
+
+		var ABLength = Math.sqrt(ABx*ABx + ABy*ABy)
+
+		var NABx = ABx / ABLength
+		var NABy = ABy / ABLength
+
+		var PNABx = -NABy
+		var PNABy =  NABx
+
+		var Dx = Ax + (5)*PNABx
+		var Dy = Ay + (5)*PNABy
+
+		var Cx = Ax + (-5)*PNABx
+		var Cy = Ay + (-5)*PNABy
+
+	smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
+
+
+		}
+//console.log(j)
+smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
+
 }
 
 smooth[smooth.length-1][1].tag=(document.getElementById("brush").value)
@@ -345,42 +380,22 @@ for(i=0;i<smooth.length;i++){
 		}
 		ctx.stroke()
 	}
-	else if(smooth[i][1].tag=='perp'){
-		ctx.lineWidth = 1
-		ctx.beginPath()	
-		ctx.strokeStyle = "#777"
+	else if(smooth[i][1].tag=='spray'){
+
+		ctx.fillStyle = "#777"
 		for(j=0;j<smooth[i].length-1;j++){
-
-		var Ax = smooth[i][j].x
-		var Ay = smooth[i][j].y
-		var Bx = smooth[i][j+1].x
-		var By = smooth[i][j+1].y
-
-		var ABx =  Bx - Ax
-		var ABy =  By - Ay
-
-		var ABLength = Math.sqrt(ABx*ABx + ABy*ABy)
-
-		var NABx = ABx / ABLength
-		var NABy = ABy / ABLength
-
-		var PNABx = -NABy
-		var PNABy =  NABx
-
-		var Dx = Ax + (7)*PNABx
-		var Dy = Ay + (7)*PNABy
-
-		var Cx = Ax + (-7)*PNABx
-		var Cy = Ay + (-7)*PNABy
-
 		ctx.beginPath()
+		ctx.moveTo(smooth[i][j].cx,smooth[i][j].cy)
+		ctx.arc(smooth[i][j].cx,smooth[i][j].cy,(125.37/80),0,2*Math.PI)
 		ctx.moveTo(smooth[i][j].x,smooth[i][j].y)
-		ctx.lineTo(Dx,Dy)
-		ctx.lineTo(Cx,Cy)
-		ctx.stroke()
-
+		ctx.arc(smooth[i][j].x,smooth[i][j].y,(125.37/64),0,2*Math.PI)
+		ctx.moveTo(smooth[i][j].dx,smooth[i][j].dy)
+		ctx.arc(smooth[i][j].dx,smooth[i][j].dy,(125.37/80),0,2*Math.PI)
+		ctx.fill()
 		}
 	}
+
+	
 	else if(smooth[i][1].tag=='dots'){
 		ctx.lineWidth = 1
 		ctx.fillStyle="#000"
@@ -405,11 +420,11 @@ ctx.strokeStyle = "#eee"
 
 for(i=0;i<endpts.length;i++){
 	ctx.beginPath()	
-		ctx.arc(endpts[i][0].x,endpts[i][0].y,(125.37/30),0,2*Math.PI)
+		ctx.arc(endpts[i][0].x,endpts[i][0].y,(125.37/60),0,2*Math.PI)
 	ctx.fill()
 	ctx.stroke()
 	ctx.beginPath()	
-		ctx.arc(endpts[i][1].x,endpts[i][1].y,(125.37/30),0,2*Math.PI)
+		ctx.arc(endpts[i][1].x,endpts[i][1].y,(125.37/60),0,2*Math.PI)
 	ctx.fill()
 	ctx.stroke()
 }
@@ -520,7 +535,7 @@ feedrate = document.getElementById("feedrate").value
 g+="g20\n"
 g+="g0z0.25\n"
 g+="m4\n"
-g+="g4p2\n"
+g+="g4p5\n"
 
 /*
 for(i=0;i<smooth.length;i++){
@@ -536,9 +551,10 @@ for(i=0;i<smooth.length;i++){
 
 for(i=0;i<smooth.length;i++){
 
-   g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
+
 
 	if(smooth[i][1].tag=='smooth'){
+   	g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
 	   g+="g1z" + depth +"f" + (feedrate/2).toFixed(0) + "\n"
 	   g+="g1f" + feedrate + "\n"
    	for(j=1;j<smooth[i].length;j++){
@@ -548,6 +564,7 @@ for(i=0;i<smooth.length;i++){
 	}
 
 	else if(smooth[i][1].tag=='dots'){
+		g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
    	for(j=0;j<smooth[i].length;j++){
 	      g+="g0x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "\n"
 			g+="g1z" + depth +"f" + (feedrate/2).toFixed(0) + "\n"
@@ -555,8 +572,29 @@ for(i=0;i<smooth.length;i++){
 		}
 	}
 
+	else if(smooth[i][1].tag=='spray'){
+   	for(j=0;j<smooth[i].length;j++){
+	      g+="g0x"+(((smooth[i][j].cx)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].cy))+ymin)/sf).toFixed(3) + "\n"
+			g+="g1z" + (depth/6).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
+			g+="g0z0.05\n"
+
+	      g+="g0x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "\n"
+			g+="g1z" + (depth/3).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
+			g+="g0z0.05\n"
+
+	      g+="g0x"+(((smooth[i][j].dx)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].dy))+ymin)/sf).toFixed(3) + "\n"
+			g+="g1z" + (depth/6).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
+			g+="g0z0.05\n"
+
+		}
+	}
+
 }
+
+g+="g0z0.25\n"
+g+="g4p0.5\n"
 g+="m5\n"
+g+="g0x" + ((xmax-xmin)/sf).toFixed(3) + "y" + ((ymax-ymin)/sf).toFixed(3) + "\n"
 g+="m30\n"
 
 //console.log(g)
@@ -564,8 +602,8 @@ g+="m30\n"
 
 fabmo.submitJob({
    file : g,
-   filename : "sketch.g",
-   name : "SKETCH",
+   filename : "graffiti.g",
+   name : "graffiti",
    description : ""
 });
 
