@@ -2,7 +2,7 @@
 	"name":"GRAFFITI!",
 	"main":"./index.html",
 	"icon":"icon.png",
-	"icon_color":"white",
+	"icon_color":"black",
 	"version":"0.0.2",
 	"author":"Jonathan Ward",
 	"website":"http://github.com/FabMo/",

@@ -12,12 +12,16 @@
     right:10px;
     top: 50 px;
     cursor: pointer;
+	 padding-top: 1em;
+	 padding-left: 1em;
+	 padding-right: 1em;
+	 padding-bottom: 1em;
 }
 
 .inputContainer{
     color: #fff;
     position: absolute;
-    top: 90px;
+    top: 110px;
     right: -1000px;
     width: 30%;
     z-index: 10;
