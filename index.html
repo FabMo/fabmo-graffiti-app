@@ -17,7 +17,9 @@ $(document).on("mobileinit", function() {
 	console.log("mobileinit")
 });
 </script>
+
 <script src="js/jquery.mobile-1.4.5.js"></script>
+
 <style>
 
 canvas{
@@ -25,6 +27,9 @@ canvas{
 	left: 0px;
 	bottom: 0px;
    background: #ddf;
+}
+#translate{
+	display: hidden;
 }
 
 
@@ -42,10 +47,15 @@ canvas{
 </div>
 <img class="menu-icon" src="css/menu.png">
 <div class="inputContainer">
-	<label for="feedrate">FEEDRATE</label>
+
+	<label for="depth">CUT DEPTH (inch)</label>
+	<input type="number" name="depth" id="depth" step="0.01" value="-0.01" autocomplete="on"/>
+
+	<label for="feedrate">FEEDRATE (inch/min)</label>
 	<input type="number" name="feedrate" id="feedrate" step="10" value="30" autocomplete="on"/>
 
-	<select id="brush">
+	<label for="brush">BRUSH</label>
+	<select id="brush" name="brush">
 		<option value="dots">Dots</option>
 		<option value="smooth">Line</option>
 		<option value="spray">Spray</option>
@@ -53,6 +63,14 @@ canvas{
 
 	<label for="straight">STRAIGHT</label>
 	<input type="checkbox" name="straight" id="straight" onclick="toggle()"/>
+
+	<label for="rotate">ROTATE</label>
+	<input type="checkbox" name="rotate" id="rotate" onclick="toggle()"/>
+
+
+	<label for="translate">TRANSLATE</label>
+	<input type="checkbox" name="translate" id="translate" onclick="toggle()"/>
+
 
 	<label for="ortho-h">ORTHO H</label>
 	<input type="checkbox" name="ortho-h" id="ortho-h" onclick="toggle()"/>
@@ -68,13 +86,12 @@ canvas{
 <script>
 
 //TODO
+
 //
-//ppi global variable
-//ortho straight
+//
+//rotate canvas 8x6 (on orientation change?)
 //arc corners
-//
-//grid
-//rotate canvas
+//two finger move
 //multi finger touch brush select
 //menu instructions help?
 //two finger tap display work area
@@ -82,7 +99,6 @@ canvas{
 //pattern array
 //pockets
 //fills
-//grid
 //gradient
 //
 
@@ -95,11 +111,9 @@ var n = 0
 var ts = 0
 var sketch = false
 var path
-var depth = -0.1
-var ppi = 72
+var depth
+var ppi = 127 //127 
 
-var min_depth = 1
-var max_depth = 1
 
 var z = []
 
@@ -116,8 +130,9 @@ var rymax
 var zmin
 var zmax
 
-function makeSmooth(){
+//ppi=Math.round($(window).height()/8)-15
 
+function makeSmooth(){
 
 if(points[points.length-1].length>0){
 	endpts.push([points[points.length-1][0]])
@@ -175,7 +190,7 @@ if(curve.length==1){
 
 //CHAIKIN'S ALGORITHM
 
-if(curve.length>2){
+if((curve.length>2) && ((document.getElementById("straight").checked)==false)){
 
 	while(n>=0){
 		smooth[points.length-1].push(curve[0])
@@ -226,6 +241,7 @@ else{
 
 z=[]
 
+/*
 for(i=0;i<smooth.length;i++){
 	z.push([])
 	for(j=0;j<smooth[i].length-1;j++){
@@ -251,7 +267,7 @@ zmin = Math.min.apply(this,$.map(z[i], function(o){ return o.z; }))
 	}
 	}
 }
-
+*/
 //console.log(z)
 
 if(((document.getElementById("brush").value)=='dots') || ((document.getElementById("brush").value)=='spray')){
@@ -267,10 +283,10 @@ if(((document.getElementById("brush").value)=='dots') || ((document.getElementBy
 	smooth[smooth.length-1]=[]
 
 	if((document.getElementById("brush").value)=='spray'){
-		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/5))).toFixed(3))
+		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/(ppi/25.4)))).toFixed(3))
 	}
 	else{
-		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/10))).toFixed(3))
+		var l = parseFloat((Snap.path.getTotalLength(path)/Math.round((Snap.path.getTotalLength(path)/(ppi/12.7)))).toFixed(3))
 	}
 
 
@@ -311,30 +327,38 @@ smooth[smooth.length-1] = []
 		var PNABx = -NABy
 		var PNABy =  NABx
 
-		var Dx = Ax + (5)*PNABx
-		var Dy = Ay + (5)*PNABy
+		var Dx = Ax + ((ppi/25.4)*PNABx)
+		var Dy = Ay + ((ppi/25.4)*PNABy)
 
-		var Cx = Ax + (-5)*PNABx
-		var Cy = Ay + (-5)*PNABy
+		var Cx = Ax + (-(ppi/25.4)*PNABx)
+		var Cy = Ay + (-(ppi/25.4)*PNABy)
 
 		smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
 
-
 		}
-//console.log(j)
-smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
-
+	//console.log(j)
+	smooth[smooth.length-1].push({x:curve[j].x,y:curve[j].y,cx:Cx,cy:Cy,dx:Dx,dy:Dy})
 }
 
-smooth[smooth.length-1][1].tag=(document.getElementById("brush").value)
+
+if(smooth[smooth.length-1].length>=1){
+	smooth[smooth.length-1].push({tag:(document.getElementById("brush").value)})
+}
+else{
+	smooth.pop()
+	points.pop()
+}
 
 //console.log(smooth)
+
 
 draw()
 
 }
 
 function draw(){
+
+
 
 c = document.getElementById("myCanvas")
 ctx = c.getContext("2d")
@@ -351,8 +375,8 @@ if((document.getElementById("workarea").checked==true) && (smooth.length==0)){
 	ymax = ctx.canvas.height-50
 	xmin = 75
 
-	ymin = ymax-(8*125.37)
-	xmax = xmin+(6*125.37)
+	ymin = ymax-(8*ppi)
+	xmax = xmin+(6*ppi)
 
 }
 
@@ -372,8 +396,8 @@ else if ((document.getElementById("workarea").checked==true) && (smooth.length==
 	ymax = ctx.canvas.height-50
 	xmin = 75
 
-	xmax = xmin+(6*125.37)
-	ymin = ymax-(8*125.37)
+	xmax = xmin+(6*ppi)
+	ymin = ymax-(8*ppi)
 
 }
 else if ((document.getElementById("workarea").checked==true) && (smooth.length>1)){
@@ -381,8 +405,8 @@ else if ((document.getElementById("workarea").checked==true) && (smooth.length>1
 	ymax = ctx.canvas.height-50
 	xmin = 75
 
-	xmax = xmin+(6*125.37)
-	ymin = ymax-(8*125.37)
+	xmax = xmin+(6*ppi)
+	ymin = ymax-(8*ppi)
 }
 else if ((document.getElementById("workarea").checked==false) && (smooth.length>0)){
 	xmin = rxmin
@@ -393,36 +417,6 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length>
 
 
 lines()
-
-/*
-ctx.beginPath()
-	ctx.fillStyle = "#fff000"
-	ctx.arc(xmin-10,ymax+10,2,0,2*Math.PI)
-ctx.fill()
-*/
-
-	ctx.lineWidth = 3
-	ctx.strokeStyle = "#fff"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.lineWidth = 1
-	ctx.strokeStyle = "#777"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.fillStyle='#aaa'
-	ctx.font = "14px Arial";
-	ctx.fillText((((xmax-xmin)/125.37)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	ctx.fillText((((ymax-ymin)/125.37)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
 
 }
 
@@ -444,7 +438,7 @@ $("#myCanvas").bind('vmousedown', function(e) {
 });
 
 $("#myCanvas").bind('vmousemove', function(e) {
-	if((sketch==true) && (typeof e.clientX != 'undefined')  && (document.getElementById("ortho-h").checked==false)  && (document.getElementById("ortho-v").checked==false) && (document.getElementById("straight").checked==false)) {
+	if((sketch==true) && (typeof e.clientX != 'undefined')  && (document.getElementById("ortho-h").checked==false)  && (document.getElementById("ortho-v").checked==false) && (document.getElementById("straight").checked==false) && (document.getElementById("translate").checked==false)) {
 		ctx.lineTo(e.clientX,e.clientY)
 	   points[points.length-1].push({x:e.clientX,y:e.clientY})
 	   ctx.stroke()
@@ -474,14 +468,43 @@ $("#myCanvas").bind('vmousemove', function(e) {
 
 	}
 
+	else if((sketch==true) && (typeof e.clientX != 'undefined') && (document.getElementById("translate").checked==true)) {
+		ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+		lines()
+		ctx.beginPath();
+		ctx.moveTo(points[points.length-1][0].x,points[points.length-1][0].y)
+		ctx.lineTo(e.clientX,e.clientY)
+		ctx.lineWidth = 2
+	   ctx.stroke()
+
+	}
+
+
 	e.preventDefault()
 });
 
 
 $("#myCanvas").bind('vmouseup', function(e) {
-	points[points.length-1].push({x:e.clientX,y:e.clientY})
-	sketch=false
-	makeSmooth()
+	if(document.getElementById("translate").checked==false){
+		points[points.length-1].push({x:e.clientX,y:e.clientY})
+		sketch=false
+		makeSmooth()
+	}
+	//translate
+	else{
+		var deltaX = e.clientX-points[points.length-1][0].x
+		var deltaY = e.clientY-points[points.length-1][0].y
+		console.log(deltaX + " " + deltaY)
+		points.pop()
+		console.log(points)
+		for(i=0;i<smooth.length;i++){
+			for(j=0;j<smooth[i].length;j++){
+				smooth[i][j].x = smooth[i][j].x+deltaX
+			}
+		}
+		//document.getElementById("translate").checked=false
+		draw()
+	}
 	e.preventDefault()
 });
 
@@ -520,7 +543,25 @@ ctx.lineWidth = 1
 ctx.beginPath()
 ctx.fillStyle = "#E0E0F8"
 ctx.strokeStyle = "#ccc"
+
+//grid
+
+if(document.getElementById("workarea").checked==true){
+ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+for(i=0;i<=6;i++){
+ctx.moveTo(xmin+ppi*i,ymax)
+ctx.lineTo(xmin+ppi*i,ymin)
+}
+for(i=0;i<=8;i++){
+ctx.moveTo(xmin,ymin+ppi*i)
+ctx.lineTo(xmax,ymin+ppi*i)
+}
+}
+else{
 ctx.rect(xmin-10,ymin-10,xmax+20-xmin,ymax+20-ymin)
+}
+
+//
 ctx.fill()
 ctx.stroke()
 
@@ -532,8 +573,8 @@ if(smooth.length>0){
 
 for(i=0;i<smooth.length;i++){
 
-	if(smooth[i][1].tag=='smooth'){
-		ctx.lineWidth = (125.37/16)
+	if(smooth[i][smooth[i].length-1].tag=='smooth'){
+		ctx.lineWidth = (ppi/16)
 		ctx.strokeStyle = "#6495ed"
 		ctx.beginPath()
 		ctx.moveTo(smooth[i][0].x,smooth[i][0].y)
@@ -542,30 +583,30 @@ for(i=0;i<smooth.length;i++){
 		}
 		ctx.stroke()
 	}
-	else if(smooth[i][1].tag=='spray'){
+	else if(smooth[i][smooth[i].length-1].tag=='spray'){
 
 		ctx.fillStyle = "#777"
 		for(j=0;j<smooth[i].length-1;j++){
 		ctx.beginPath()
 		ctx.moveTo(smooth[i][j].cx,smooth[i][j].cy)
-		ctx.arc(smooth[i][j].cx,smooth[i][j].cy,(125.37/80),0,2*Math.PI)
+		ctx.arc(smooth[i][j].cx,smooth[i][j].cy,(ppi/80),0,2*Math.PI)
 		ctx.moveTo(smooth[i][j].x,smooth[i][j].y)
-		ctx.arc(smooth[i][j].x,smooth[i][j].y,(125.37/64),0,2*Math.PI)
+		ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/64),0,2*Math.PI)
 		ctx.moveTo(smooth[i][j].dx,smooth[i][j].dy)
-		ctx.arc(smooth[i][j].dx,smooth[i][j].dy,(125.37/80),0,2*Math.PI)
+		ctx.arc(smooth[i][j].dx,smooth[i][j].dy,(ppi/80),0,2*Math.PI)
 		ctx.fill()
 		}
 	}
 
 	
-	else if(smooth[i][1].tag=='dots'){
+	else if(smooth[i][smooth[i].length-1].tag=='dots'){
 		ctx.lineWidth = 1
 		ctx.fillStyle="#000"
 		ctx.beginPath()
 		for(j=0;j<smooth[i].length;j++){
 		   ctx.beginPath();
 //			ctx.arc(smooth[i][j].x,smooth[i][j].y,1+(6*z[i][j].z),0,2*Math.PI)
-			ctx.arc(smooth[i][j].x,smooth[i][j].y,(125.37/32),0,2*Math.PI)
+			ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/32),0,2*Math.PI)
 //			ctx.stroke()
 			ctx.fill()
 		}
@@ -573,24 +614,47 @@ for(i=0;i<smooth.length;i++){
 		}
 
 		ctx.lineWidth = 6
-}
+		}
 
-}
+	}
 
-ctx.lineWidth = 1
-ctx.fillStyle="#ff00ff"
-ctx.strokeStyle = "#eee"
+	ctx.lineWidth = 1
+	ctx.fillStyle="#ff00ff"
+	ctx.strokeStyle = "#eee"
 
-for(i=0;i<endpts.length;i++){
+	for(i=0;i<endpts.length;i++){
 	ctx.beginPath()	
-		ctx.arc(endpts[i][0].x,endpts[i][0].y,(125.37/60),0,2*Math.PI)
+		ctx.arc(endpts[i][0].x,endpts[i][0].y,(ppi/60),0,2*Math.PI)
 	ctx.fill()
 	ctx.stroke()
 	ctx.beginPath()	
-		ctx.arc(endpts[i][1].x,endpts[i][1].y,(125.37/60),0,2*Math.PI)
+		ctx.arc(endpts[i][1].x,endpts[i][1].y,(ppi/60),0,2*Math.PI)
 	ctx.fill()
 	ctx.stroke()
-}
+	}
+
+	ctx.lineWidth = 3
+	ctx.strokeStyle = "#fff"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.lineWidth = 1
+	ctx.strokeStyle = "#777"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.fillStyle='#aaa'
+	ctx.font = "14px Arial";
+	ctx.fillText((((xmax-xmin)/ppi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	ctx.fillText((((ymax-ymin)/ppi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
 
 
 }
@@ -599,9 +663,9 @@ for(i=0;i<endpts.length;i++){
 function make(){
 
 
-
-//scale 125.37 ppi
-var sf = ((xmax-xmin)/((xmax-xmin)/125.37))
+depth = document.getElementById("depth").value
+//scale ppi ppi
+var sf = ((xmax-xmin)/((xmax-xmin)/ppi))
 
 feedrate = document.getElementById("feedrate").value
 
@@ -626,7 +690,7 @@ for(i=0;i<smooth.length;i++){
 
 
 
-	if(smooth[i][1].tag=='smooth'){
+	if(smooth[i][smooth[i].length-1].tag=='smooth'){
    	g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
 	   g+="g1z" + depth +"f" + (feedrate/2).toFixed(0) + "\n"
 	   g+="g1f" + feedrate + "\n"
@@ -636,7 +700,7 @@ for(i=0;i<smooth.length;i++){
 		g+="g0z0.05\n"
 	}
 
-	else if(smooth[i][1].tag=='dots'){
+	else if(smooth[i][smooth[i].length-1].tag=='dots'){
 		g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
    	for(j=0;j<smooth[i].length;j++){
 	      g+="g0x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "\n"
@@ -645,7 +709,7 @@ for(i=0;i<smooth.length;i++){
 		}
 	}
 
-	else if(smooth[i][1].tag=='spray'){
+	else if(smooth[i][smooth[i].length-1].tag=='spray'){
    	for(j=0;j<smooth[i].length;j++){
 	      g+="g0x"+(((smooth[i][j].cx)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].cy))+ymin)/sf).toFixed(3) + "\n"
 			g+="g1z" + (depth/6).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
@@ -667,7 +731,7 @@ for(i=0;i<smooth.length;i++){
 g+="g0z0.25\n"
 g+="g4p0.5\n"
 g+="m5\n"
-g+="g0x" + ((rxmax-rxmin)/sf).toFixed(3) + "y" + ((rymax-rymin)/sf).toFixed(3) + "\n"
+g+="g0x" + ((rxmax-xmin)/sf).toFixed(3) + "y" + ((ymax-rymin)/sf).toFixed(3) + "\n"
 g+="m30\n"
 
 //console.log(g)
