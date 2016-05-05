@@ -8,6 +8,7 @@
 <script src="js/jquery-1.11.2.min.js"></script>
 <script src="js/libs/fabmo.js"></script>
 <script src="js/simplify.js"></script>
+<script src="js/jquery.mousewheel.min.js"></script>
 <script src="js/snap.svg-min.js"></script>
     <script type="text/javascript">
         var fabmo = new FabMoDashboard();
@@ -86,9 +87,13 @@ canvas{
 <script>
 
 //TODO
+//
+//
+//graffiti cad
+//simplify geometry
+//multi finger polygon
 
-//
-//
+//cutout option
 //rotate canvas 8x6 (on orientation change?)
 //arc corners
 //two finger move
@@ -102,6 +107,8 @@ canvas{
 //gradient
 //
 
+//var scale when drawn
+
 var g = ""
 var points = []
 var smooth = []
@@ -112,7 +119,15 @@ var ts = 0
 var sketch = false
 var path
 var depth
-var ppi = 127 //127 
+var ppi = 127 //127
+var dpi = 127
+var scale = 0 
+var sf = 1
+var sfx = 1
+var sfy = 1
+var zx = 0
+var zy = 0
+var zoom = false
 
 
 var z = []
@@ -342,7 +357,7 @@ smooth[smooth.length-1] = []
 
 
 if(smooth[smooth.length-1].length>=1){
-	smooth[smooth.length-1].push({tag:(document.getElementById("brush").value)})
+	smooth[smooth.length-1].push({tag:(document.getElementById("brush").value),zoom:false})
 }
 else{
 	smooth.pop()
@@ -357,8 +372,6 @@ draw()
 }
 
 function draw(){
-
-
 
 c = document.getElementById("myCanvas")
 ctx = c.getContext("2d")
@@ -414,11 +427,61 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length>
 	ymin = rymin
 	ymax = rymax
 }
-
+//  console.log(xmax + " " + ymin)
+	
 
 lines()
 
 }
+
+$("#myCanvas").bind('mousewheel',function(e){
+
+//	console.log(e)
+
+
+		
+//	sf = dpi/ppi
+//	console.log(sf)
+//console.log("first:" + ((smooth[0][0].x-xmin)/ppi) + " " + ((ymax-smooth[0][0].y)/ppi))
+//console.log("last:" + ((smooth[0][smooth[0].length-2].x-xmin)/ppi) + " " + ((ymax-smooth[0][smooth[0].length-2].y)/ppi))
+	
+	for(i=0;i<smooth.length;i++){	
+	
+		if(smooth[i][smooth[i].length-1].zoom==false){
+
+		smooth[i][smooth[i].length-1].zoom=true
+		//if drawn when zoom != 1
+			for(j=0;j<smooth[i].length-1;j++){
+
+//				console.log((smooth[i][j].x-xmin)/ppi)
+				smooth[i][j].x = xmin+(((smooth[i][j].x-xmin)/(ppi))*dpi)
+				smooth[i][j].y = ymax-(((ymax-smooth[i][j].y)/(ppi))*dpi)
+
+			}
+
+		}
+
+		
+	}
+
+
+	if(e.deltaY==1){
+		ppi=ppi+3
+		scale=scale+3
+ 
+	}
+	else{
+		ppi=ppi-3
+		scale=scale-3
+	}
+
+//	console.log(smooth)
+
+	draw()
+
+	e.preventDefault()
+});
+
 
 $("#myCanvas").bind('vmousedown', function(e) {
     if ($('.inputContainer').data('open')== 'true'){    
@@ -433,8 +496,8 @@ $("#myCanvas").bind('vmousedown', function(e) {
 	points.push([])
 	ctx.strokeStyle = "#819FF7"
 	points[points.length-1].push({x:e.clientX,y:e.clientY})
-	
 	e.preventDefault()
+
 });
 
 $("#myCanvas").bind('vmousemove', function(e) {
@@ -478,7 +541,6 @@ $("#myCanvas").bind('vmousemove', function(e) {
 	   ctx.stroke()
 
 	}
-
 
 	e.preventDefault()
 });
@@ -547,23 +609,30 @@ ctx.strokeStyle = "#ccc"
 //grid
 
 if(document.getElementById("workarea").checked==true){
-ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
-for(i=0;i<=6;i++){
-ctx.moveTo(xmin+ppi*i,ymax)
-ctx.lineTo(xmin+ppi*i,ymin)
-}
-for(i=0;i<=8;i++){
-ctx.moveTo(xmin,ymin+ppi*i)
-ctx.lineTo(xmax,ymin+ppi*i)
-}
+	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+	for(i=0;i<=6;i++){
+		ctx.moveTo(xmin+ppi*i,ymax)
+		ctx.lineTo(xmin+ppi*i,ymin)
+	}
+	for(i=0;i<=8;i++){
+		ctx.moveTo(xmin,ymin+ppi*i)
+		ctx.lineTo(xmax,ymin+ppi*i)
+	}
 }
 else{
-ctx.rect(xmin-10,ymin-10,xmax+20-xmin,ymax+20-ymin)
+	ctx.rect(xmin-10,ymin-10,xmax+20-xmin,ymax+20-ymin)
 }
 
 //
 ctx.fill()
 ctx.stroke()
+
+//sf = parseFloat((ppi/dpi).toFixed(2))
+//console.log(sf)
+
+//console.log(smooth[0][0].x)
+//console.log(xmin+ppi)
+//console.log(scale)
 
 ctx.lineWidth = 6
 ctx.lineJoin="round"
@@ -578,7 +647,7 @@ for(i=0;i<smooth.length;i++){
 		ctx.strokeStyle = "#6495ed"
 		ctx.beginPath()
 		ctx.moveTo(smooth[i][0].x,smooth[i][0].y)
-		for(j=1;j<smooth[i].length;j++){				
+		for(j=1;j<smooth[i].length-1;j++){				
 			ctx.lineTo(smooth[i][j].x,smooth[i][j].y)			
 		}
 		ctx.stroke()
@@ -597,32 +666,53 @@ for(i=0;i<smooth.length;i++){
 		ctx.fill()
 		}
 	}
-
 	
 	else if(smooth[i][smooth[i].length-1].tag=='dots'){
 		ctx.lineWidth = 1
 		ctx.fillStyle="#000"
-		ctx.beginPath()
-		for(j=0;j<smooth[i].length;j++){
+		for(j=0;j<smooth[i].length-1;j++){
+		
+			if(scale!==0){	
+				sfx=((smooth[i][j].x-xmin)/dpi)
+				sfy=((smooth[i][j].y-ymax)/dpi)
+			}
+			else{
+				sfx=1
+				sfy=1
+			}			
+	
 		   ctx.beginPath();
-//			ctx.arc(smooth[i][j].x,smooth[i][j].y,1+(6*z[i][j].z),0,2*Math.PI)
-			ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/32),0,2*Math.PI)
-//			ctx.stroke()
+			if(smooth[i][smooth[i].length-1].zoom==false){
+
+				ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/32),0,2*Math.PI)
+
+				
+			}
+			else if(smooth[i][smooth[i].length-1].zoom==true){
+				ctx.arc(smooth[i][j].x+scale*sfx,smooth[i][j].y+scale*sfy,(ppi/32),0,2*Math.PI)
+			}			
 			ctx.fill()
 		}
 
+//		console.log("first:" + ((smooth[0][0].x-xmin)/ppi) + " " + ((ymax-smooth[0][0].y)/ppi))
+//		console.log("last:" + ((smooth[0][smooth[0].length-2].x-xmin)/ppi) + " " + ((ymax-smooth[0][smooth[0].length-2].y)/ppi))
+
 		}
+
+//		smooth[i][smooth[i].length-1].zoom=true
 
 		ctx.lineWidth = 6
 		}
 
 	}
+//	console.log(smooth)
 
 	ctx.lineWidth = 1
 	ctx.fillStyle="#ff00ff"
 	ctx.strokeStyle = "#eee"
 
 	for(i=0;i<endpts.length;i++){
+
 	ctx.beginPath()	
 		ctx.arc(endpts[i][0].x,endpts[i][0].y,(ppi/60),0,2*Math.PI)
 	ctx.fill()
@@ -656,16 +746,20 @@ for(i=0;i<smooth.length;i++){
 	ctx.fillText((((xmax-xmin)/ppi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
 	ctx.fillText((((ymax-ymin)/ppi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
 
+	ctx.fillStyle='#000'
+	ctx.beginPath();
+//	ctx.arc(xmin+dpi*1.5+scale*1.5,ymax-dpi*1.5-scale*1.5,(ppi/64),0,2*Math.PI)
+	ctx.fill()
 
+	zoom = false
 }
-
 
 function make(){
 
 
 depth = document.getElementById("depth").value
 //scale ppi ppi
-var sf = ((xmax-xmin)/((xmax-xmin)/ppi))
+sf = ((xmax-xmin)/((xmax-xmin)/ppi))
 
 feedrate = document.getElementById("feedrate").value
 
@@ -694,7 +788,7 @@ for(i=0;i<smooth.length;i++){
    	g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
 	   g+="g1z" + depth +"f" + (feedrate/2).toFixed(0) + "\n"
 	   g+="g1f" + feedrate + "\n"
-   	for(j=1;j<smooth[i].length;j++){
+   	for(j=1;j<smooth[i].length-1;j++){
 	      g+="g1x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "\n"
 		}
 		g+="g0z0.05\n"
@@ -702,7 +796,7 @@ for(i=0;i<smooth.length;i++){
 
 	else if(smooth[i][smooth[i].length-1].tag=='dots'){
 		g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
-   	for(j=0;j<smooth[i].length;j++){
+   	for(j=0;j<smooth[i].length-1;j++){
 	      g+="g0x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "\n"
 			g+="g1z" + depth +"f" + (feedrate/2).toFixed(0) + "\n"
 			g+="g0z0.05\n"
@@ -710,7 +804,7 @@ for(i=0;i<smooth.length;i++){
 	}
 
 	else if(smooth[i][smooth[i].length-1].tag=='spray'){
-   	for(j=0;j<smooth[i].length;j++){
+   	for(j=0;j<smooth[i].length-1;j++){
 	      g+="g0x"+(((smooth[i][j].cx)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].cy))+ymin)/sf).toFixed(3) + "\n"
 			g+="g1z" + (depth/6).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
 			g+="g0z0.05\n"
