@@ -438,12 +438,6 @@ $("#myCanvas").bind('mousewheel',function(e){
 
 //	console.log(e)
 
-
-		
-//	sf = dpi/ppi
-//	console.log(sf)
-//console.log("first:" + ((smooth[0][0].x-xmin)/ppi) + " " + ((ymax-smooth[0][0].y)/ppi))
-//console.log("last:" + ((smooth[0][smooth[0].length-2].x-xmin)/ppi) + " " + ((ymax-smooth[0][smooth[0].length-2].y)/ppi))
 	
 	for(i=0;i<smooth.length;i++){	
 	
@@ -694,18 +688,13 @@ for(i=0;i<smooth.length;i++){
 			ctx.fill()
 		}
 
-//		console.log("first:" + ((smooth[0][0].x-xmin)/ppi) + " " + ((ymax-smooth[0][0].y)/ppi))
-//		console.log("last:" + ((smooth[0][smooth[0].length-2].x-xmin)/ppi) + " " + ((ymax-smooth[0][smooth[0].length-2].y)/ppi))
-
 		}
-
-//		smooth[i][smooth[i].length-1].zoom=true
 
 		ctx.lineWidth = 6
 		}
 
 	}
-//	console.log(smooth)
+
 
 	ctx.lineWidth = 1
 	ctx.fillStyle="#ff00ff"
