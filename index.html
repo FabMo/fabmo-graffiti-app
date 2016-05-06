@@ -258,34 +258,6 @@ else{
 
 z=[]
 
-/*
-for(i=0;i<smooth.length;i++){
-	z.push([])
-	for(j=0;j<smooth[i].length-1;j++){
-		z[i].push({z:(max_depth/(max_depth*(1+(Math.sqrt(Math.pow((smooth[i][j].x-smooth[i][j+1].x),2)+Math.pow((smooth[i][j].y-smooth[i][j+1].y),2))))))})		
-	}
-z[i].push({z:(z[i][z[i].length-1]).z})
-
-}
-//console.log(z)
-
-for(i=0;i<z.length;i++){
-
-zmax = Math.max.apply(this,$.map(z[i], function(o){ return o.z; }))
-zmin = Math.min.apply(this,$.map(z[i], function(o){ return o.z; }))
-
-	for(j=0;j<z[i].length;j++){
-
-	if(zmax!=zmin){
-	z[i][j].z = parseFloat((z[i][j].z-zmin).toFixed(3))
-	}
-	else{
-		z[i][j].z=0
-	}
-	}
-}
-*/
-//console.log(z)
 
 if(((document.getElementById("brush").value)=='dots') || ((document.getElementById("brush").value)=='spray')){
 
@@ -368,7 +340,6 @@ else{
 
 //console.log(smooth)
 
-
 draw()
 
 }
@@ -394,15 +365,12 @@ lines()
 $("#myCanvas").bind('mousewheel',function(e){
 
 //	console.log(e)
-
 	
 	for(i=0;i<smooth.length;i++){	
 	
 		if(smooth[i][smooth[i].length-1].zoom==false){
 
 		smooth[i][smooth[i].length-1].zoom=true
-//		smooth[i][smooth[i].length-1].xmin=xmin
-//		smooth[i][smooth[i].length-1].ymax=ymax
 
 			for(j=0;j<smooth[i].length-1;j++){
 
@@ -410,11 +378,7 @@ $("#myCanvas").bind('mousewheel',function(e){
 				smooth[i][j].x = xmin+(((smooth[i][j].x-xmin)/(ppi))*dpi)
 				smooth[i][j].y = ymax-(((ymax-smooth[i][j].y)/(ppi))*dpi)
 
-//				smooth[i][j].x = (((smooth[i][j].x)/(ppi))*dpi)
-//				smooth[i][j].y = $(window).height()-((($(window).height()-smooth[i][j].y)/(ppi))*dpi)
 
-//				smooth[i][j].x = xmin+(((smooth[i][j].x-(smooth[i][smooth[i].length-1].xmin))/(ppi))*dpi)
-//				smooth[i][j].y = ymax-((((smooth[i][smooth[i].length-1].ymax)-smooth[i][j].y)/(ppi))*dpi)
 
 			}
 
@@ -583,45 +547,6 @@ else{
 
 	if((document.getElementById("workarea").checked==false) && (xmin >=0)){
 
-//	console.log((xmin/dpi))
-//	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
-
-
-
-//		allpts.push({x:xmin,y:ymin},{x:xmax,y:ymax})		
-
-//		minmax=[]
-//		minmax.push([{x:xmin,y:ymin},{x:xmax,y:ymax}])
-//		console.log(minmax)
-//	   console.log(smooth)
-		i=0
-		for(j=0;j<2;j++){
-//		zoom_sf(minmax,i,j)
-//		minmax[0][j].x = minmax[0][j].x+scale*sfx
-//		minmax[0][j].y = minmax[0][j].y+scale*sfy
-//		allpts.push({x:minmax[0][j].x+scale*sfx,y:minmax[0][j].y+scale*sfy})
-		
-	}
-
-//if(allpts.length>0){
-//console.log(Math.min.apply(this,$.map(allpts, function(o){ return o.y; })))
-
-//}
-
-//console.log(minmax)
-	if(allpts.length<1){     
-//		ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
-	}
-	else{
-//	ctx.rect((Math.min.apply(this,$.map(allpts, function(o){ return o.x; }))),(Math.min.apply(this,$.map(allpts, function(o){ return o.y; }))),(Math.max.apply(this,$.map(allpts, function(o){ return o.x; })))-(Math.min.apply(this,$.map(allpts, function(o){ return o.x; }))),(Math.max.apply(this,$.map(allpts, function(o){ return o.y; })))-(Math.min.apply(this,$.map(allpts, function(o){ return o.y; }))))
-	}
-//xmin=minmax[0][0].x
-//ymin=minmax[0][0].y
-//xmax=minmax[0][1].x
-//ymax=minmax[0][1].y
-	
-//ctx.rect(minmax[0][0].x,minmax[0][0].y,minmax[0][1].x-minmax[0][0].x,minmax[0][1].y-minmax[0][0].y)
-
 	}
 	else{
 	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
@@ -658,21 +583,9 @@ if(document.getElementById("workarea").checked==true){
 
 
 }
-	ctx.fillStyle='#000'
-	ctx.beginPath();
-//	ctx.arc(xmin+dpi*1.5+scale*1.5,ymax-dpi*1.5-scale*1.5,(ppi/64),0,2*Math.PI)
-	ctx.fill()
 
-//console.log(smooth)
 
 //
-
-//sf = parseFloat((ppi/dpi).toFixed(2))
-//console.log(sf)
-
-//console.log(smooth[0][0].x)
-//console.log(xmin+ppi)
-//console.log(scale)
 
 ctx.lineWidth = 6
 ctx.lineJoin="round"
@@ -741,25 +654,12 @@ for(i=0;i<smooth.length;i++){
 
 	}
 
-//console.log(allpts)
-//ctx.beginPath()
-//ctx.fillStyle = "#E0E0F8"
-//ctx.strokeStyle = "#ccc"
-//ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
-//ctx.fill()
-//ctx.stroke()
-
-// adjust before make
-//	xmin=rxmin
-//	ymax=rymax
 
 	ctx.lineWidth = 1
 	ctx.fillStyle="#ff00ff"
 	ctx.strokeStyle = "#eee"
 
 	for(i=0;i<endpts.length;i++){
-
-//	console.log(smooth[i].length)
 
 	for(j=0;j<=(smooth[i].length-2);j=j+(smooth[i].length-2)){
 	
@@ -779,16 +679,7 @@ for(i=0;i<smooth.length;i++){
 
 	}
 
-/*
-	ctx.beginPath()	
-		ctx.arc(endpts[i][j].x,endpts[i][j].y,(ppi/60),0,2*Math.PI)
-	ctx.fill()
-	ctx.stroke()
-	ctx.beginPath()	
-		ctx.arc(endpts[i][j].x,endpts[i][j].y,(ppi/60),0,2*Math.PI)
-	ctx.fill()
-	ctx.stroke()
-*/
+
 	}
 
 	}
@@ -830,17 +721,6 @@ g+="g0z0.25\n"
 g+="m4\n"
 g+="g4p5\n"
 
-/*
-for(i=0;i<smooth.length;i++){
-   g+="g0x"+(((smooth[i][0].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][0].y))+ymin)/sf).toFixed(3) + "\n"
-   g+="g1z-"+ (min_depth+(z[i][0].z)).toFixed(3) +"f" + (feedrate/2).toFixed(0) + "\n"
-   g+="g1f" + feedrate + "\n"
-   	for(j=1;j<smooth[i].length;j++){
-	      g+="g1x"+(((smooth[i][j].x)-xmin)/sf).toFixed(3) +"y"+ (((ymax-ymin)-((smooth[i][j].y))+ymin)/sf).toFixed(3) + "z-" + (min_depth+(z[i][j].z)).toFixed(3) + "\n"
-		}
-	g+="g0z2\n"
-}
-*/
 
 for(i=0;i<smooth.length;i++){
 
@@ -960,12 +840,9 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length>
 	xmax = rxmax
 	ymin = rymin
 	ymax = rymax
-}
+	}
 }
 
-function toggle() {
-
-}
 
 function toggleFullScreen() {
   if (!document.fullscreenElement &&    // alternative standard method
