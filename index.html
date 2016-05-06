@@ -114,6 +114,8 @@ var points = []
 var smooth = []
 var curve = []
 var endpts = []
+var minmax = []
+var allpts = []
 var n = 0
 var ts = 0
 var sketch = false
@@ -381,52 +383,7 @@ ctx.canvas.width = $(window).width()
 
 ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
 
-//work area
-
-if((document.getElementById("workarea").checked==true) && (smooth.length==0)){
-
-	ymax = ctx.canvas.height-50
-	xmin = 75
-
-	ymin = ymax-(8*ppi)
-	xmax = xmin+(6*ppi)
-
-}
-
-else if ((document.getElementById("workarea").checked==false) && (smooth.length==0)){
-	xmin = undefined
-	xmax = undefined
-	ymin = undefined
-	ymax = undefined 
-}
-else if ((document.getElementById("workarea").checked==true) && (smooth.length==1)){
-
-	rxmin = Math.min.apply(this,$.map(curve, function(o){ return o.x; }))
-	rymax = Math.max.apply(this,$.map(curve, function(o){ return o.y; }))
-	rxmax = Math.max.apply(this,$.map(curve, function(o){ return o.x; }))
-	rymin = Math.min.apply(this,$.map(curve, function(o){ return o.y; }))
-	
-	ymax = ctx.canvas.height-50
-	xmin = 75
-
-	xmax = xmin+(6*ppi)
-	ymin = ymax-(8*ppi)
-
-}
-else if ((document.getElementById("workarea").checked==true) && (smooth.length>1)){
-
-	ymax = ctx.canvas.height-50
-	xmin = 75
-
-	xmax = xmin+(6*ppi)
-	ymin = ymax-(8*ppi)
-}
-else if ((document.getElementById("workarea").checked==false) && (smooth.length>0)){
-	xmin = rxmin
-	xmax = rxmax
-	ymin = rymin
-	ymax = rymax
-}
+min_max()
 //  console.log(xmax + " " + ymin)
 	
 
@@ -444,12 +401,20 @@ $("#myCanvas").bind('mousewheel',function(e){
 		if(smooth[i][smooth[i].length-1].zoom==false){
 
 		smooth[i][smooth[i].length-1].zoom=true
-		//if drawn when zoom != 1
+//		smooth[i][smooth[i].length-1].xmin=xmin
+//		smooth[i][smooth[i].length-1].ymax=ymax
+
 			for(j=0;j<smooth[i].length-1;j++){
 
 //				console.log((smooth[i][j].x-xmin)/ppi)
 				smooth[i][j].x = xmin+(((smooth[i][j].x-xmin)/(ppi))*dpi)
 				smooth[i][j].y = ymax-(((ymax-smooth[i][j].y)/(ppi))*dpi)
+
+//				smooth[i][j].x = (((smooth[i][j].x)/(ppi))*dpi)
+//				smooth[i][j].y = $(window).height()-((($(window).height()-smooth[i][j].y)/(ppi))*dpi)
+
+//				smooth[i][j].x = xmin+(((smooth[i][j].x-(smooth[i][smooth[i].length-1].xmin))/(ppi))*dpi)
+//				smooth[i][j].y = ymax-((((smooth[i][smooth[i].length-1].ymax)-smooth[i][j].y)/(ppi))*dpi)
 
 			}
 
@@ -600,6 +565,7 @@ ctx.beginPath()
 ctx.fillStyle = "#E0E0F8"
 ctx.strokeStyle = "#ccc"
 
+
 //grid
 
 if(document.getElementById("workarea").checked==true){
@@ -614,12 +580,92 @@ if(document.getElementById("workarea").checked==true){
 	}
 }
 else{
-	ctx.rect(xmin-10,ymin-10,xmax+20-xmin,ymax+20-ymin)
-}
 
-//
+	if((document.getElementById("workarea").checked==false) && (xmin >=0)){
+
+//	console.log((xmin/dpi))
+//	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+
+
+
+//		allpts.push({x:xmin,y:ymin},{x:xmax,y:ymax})		
+
+//		minmax=[]
+//		minmax.push([{x:xmin,y:ymin},{x:xmax,y:ymax}])
+//		console.log(minmax)
+//	   console.log(smooth)
+		i=0
+		for(j=0;j<2;j++){
+//		zoom_sf(minmax,i,j)
+//		minmax[0][j].x = minmax[0][j].x+scale*sfx
+//		minmax[0][j].y = minmax[0][j].y+scale*sfy
+//		allpts.push({x:minmax[0][j].x+scale*sfx,y:minmax[0][j].y+scale*sfy})
+		
+	}
+
+//if(allpts.length>0){
+//console.log(Math.min.apply(this,$.map(allpts, function(o){ return o.y; })))
+
+//}
+
+//console.log(minmax)
+	if(allpts.length<1){     
+//		ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+	}
+	else{
+//	ctx.rect((Math.min.apply(this,$.map(allpts, function(o){ return o.x; }))),(Math.min.apply(this,$.map(allpts, function(o){ return o.y; }))),(Math.max.apply(this,$.map(allpts, function(o){ return o.x; })))-(Math.min.apply(this,$.map(allpts, function(o){ return o.x; }))),(Math.max.apply(this,$.map(allpts, function(o){ return o.y; })))-(Math.min.apply(this,$.map(allpts, function(o){ return o.y; }))))
+	}
+//xmin=minmax[0][0].x
+//ymin=minmax[0][0].y
+//xmax=minmax[0][1].x
+//ymax=minmax[0][1].y
+	
+//ctx.rect(minmax[0][0].x,minmax[0][0].y,minmax[0][1].x-minmax[0][0].x,minmax[0][1].y-minmax[0][0].y)
+
+	}
+	else{
+	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+	}
+}
 ctx.fill()
 ctx.stroke()
+	
+if(document.getElementById("workarea").checked==true){
+	ctx.lineWidth = 3
+	ctx.strokeStyle = "#fff"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.lineWidth = 1
+	ctx.strokeStyle = "#777"
+	ctx.beginPath()
+	ctx.moveTo(xmin-5,ymax)
+	ctx.lineTo(xmin+5,ymax)
+	ctx.moveTo(xmin,ymax-5)
+	ctx.lineTo(xmin,ymax+5)
+	ctx.stroke()
+
+	ctx.fillStyle='#aaa'
+	ctx.font = "14px Arial";
+	//ctx.fillText((((xmax-xmin)/dpi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	//ctx.fillText((((ymax-ymin)/dpi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
+	ctx.fillText("6\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	ctx.fillText("8\"",(xmin)-60,ymax-(ymax-ymin)/2);
+
+
+}
+	ctx.fillStyle='#000'
+	ctx.beginPath();
+//	ctx.arc(xmin+dpi*1.5+scale*1.5,ymax-dpi*1.5-scale*1.5,(ppi/64),0,2*Math.PI)
+	ctx.fill()
+
+//console.log(smooth)
+
+//
 
 //sf = parseFloat((ppi/dpi).toFixed(2))
 //console.log(sf)
@@ -633,6 +679,11 @@ ctx.lineJoin="round"
 ctx.lineCap="round"
 
 if(smooth.length>0){
+
+smooth[smooth.length-1][smooth[smooth.length-1].length-1].xmin=xmin
+smooth[smooth.length-1][smooth[smooth.length-1].length-1].ymax=ymax
+
+allpts=[]
 
 for(i=0;i<smooth.length;i++){
 
@@ -665,25 +716,20 @@ for(i=0;i<smooth.length;i++){
 		ctx.lineWidth = 1
 		ctx.fillStyle="#000"
 		for(j=0;j<smooth[i].length-1;j++){
-		
-			if(scale!==0){	
-				sfx=((smooth[i][j].x-xmin)/dpi)
-				sfy=((smooth[i][j].y-ymax)/dpi)
-			}
-			else{
-				sfx=1
-				sfy=1
-			}			
-	
+
+		//zoom scale
+		zoom_sf(smooth,i,j)
+
 		   ctx.beginPath();
 			if(smooth[i][smooth[i].length-1].zoom==false){
 
 				ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/32),0,2*Math.PI)
-
+				allpts.push(smooth[i][j])
 				
 			}
 			else if(smooth[i][smooth[i].length-1].zoom==true){
 				ctx.arc(smooth[i][j].x+scale*sfx,smooth[i][j].y+scale*sfy,(ppi/32),0,2*Math.PI)
+				allpts.push({x:smooth[i][j].x+scale*sfx,y:smooth[i][j].y+scale*sfy})
 			}			
 			ctx.fill()
 		}
@@ -695,6 +741,17 @@ for(i=0;i<smooth.length;i++){
 
 	}
 
+//console.log(allpts)
+//ctx.beginPath()
+//ctx.fillStyle = "#E0E0F8"
+//ctx.strokeStyle = "#ccc"
+//ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+//ctx.fill()
+//ctx.stroke()
+
+// adjust before make
+//	xmin=rxmin
+//	ymax=rymax
 
 	ctx.lineWidth = 1
 	ctx.fillStyle="#ff00ff"
@@ -702,49 +759,65 @@ for(i=0;i<smooth.length;i++){
 
 	for(i=0;i<endpts.length;i++){
 
+//	console.log(smooth[i].length)
+
+	for(j=0;j<=(smooth[i].length-2);j=j+(smooth[i].length-2)){
+	
+	zoom_sf(smooth,i,j)
+
+	if(smooth[i][smooth[i].length-1].zoom==false){
 	ctx.beginPath()	
-		ctx.arc(endpts[i][0].x,endpts[i][0].y,(ppi/60),0,2*Math.PI)
-	ctx.fill()
-	ctx.stroke()
-	ctx.beginPath()	
-		ctx.arc(endpts[i][1].x,endpts[i][1].y,(ppi/60),0,2*Math.PI)
+		ctx.arc(smooth[i][j].x,smooth[i][j].y,(ppi/60),0,2*Math.PI)
 	ctx.fill()
 	ctx.stroke()
 	}
-
-	ctx.lineWidth = 3
-	ctx.strokeStyle = "#fff"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.lineWidth = 1
-	ctx.strokeStyle = "#777"
-	ctx.beginPath()
-	ctx.moveTo(xmin-5,ymax)
-	ctx.lineTo(xmin+5,ymax)
-	ctx.moveTo(xmin,ymax-5)
-	ctx.lineTo(xmin,ymax+5)
-	ctx.stroke()
-
-	ctx.fillStyle='#aaa'
-	ctx.font = "14px Arial";
-	ctx.fillText((((xmax-xmin)/ppi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	ctx.fillText((((ymax-ymin)/ppi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
-
-	ctx.fillStyle='#000'
-	ctx.beginPath();
-//	ctx.arc(xmin+dpi*1.5+scale*1.5,ymax-dpi*1.5-scale*1.5,(ppi/64),0,2*Math.PI)
+	else if(smooth[i][smooth[i].length-1].zoom==true){
+	ctx.beginPath()	
+		ctx.arc(smooth[i][j].x+scale*sfx,smooth[i][j].y+scale*sfy,(ppi/60),0,2*Math.PI)
 	ctx.fill()
+	ctx.stroke()
 
-	zoom = false
+	}
+
+/*
+	ctx.beginPath()	
+		ctx.arc(endpts[i][j].x,endpts[i][j].y,(ppi/60),0,2*Math.PI)
+	ctx.fill()
+	ctx.stroke()
+	ctx.beginPath()	
+		ctx.arc(endpts[i][j].x,endpts[i][j].y,(ppi/60),0,2*Math.PI)
+	ctx.fill()
+	ctx.stroke()
+*/
+	}
+
+	}
+
+
 }
+
+function zoom_sf(pts,i,j){
+
+		if((document.getElementById("workarea").checked==false)){
+			xmin=75
+			ymax=$(window).height()-50
+
+		}
+
+			if(scale!==0){	
+				sfx=((pts[i][j].x-xmin)/dpi)
+				sfy=((pts[i][j].y-ymax)/dpi)
+			}
+			else{
+				sfx=1
+				sfy=1
+			}			
+}
+
 
 function make(){
 
+min_max()
 
 depth = document.getElementById("depth").value
 //scale ppi ppi
@@ -840,6 +913,55 @@ $('.menu-icon').click(function(){
         $('.inputContainer').data('open', 'true');
     }
 });
+
+function min_max(){
+//work area
+
+if((document.getElementById("workarea").checked==true) && (smooth.length==0)){
+
+	ymax = ctx.canvas.height-50
+	xmin = 75
+
+	ymin = ymax-(8*ppi)
+	xmax = xmin+(6*ppi)
+
+}
+
+else if ((document.getElementById("workarea").checked==false) && (smooth.length==0)){
+	xmin = undefined
+	xmax = undefined
+	ymin = undefined
+	ymax = undefined 
+}
+else if ((document.getElementById("workarea").checked==true) && (smooth.length==1)){
+
+	rxmin = Math.min.apply(this,$.map(curve, function(o){ return o.x; }))
+	rymax = Math.max.apply(this,$.map(curve, function(o){ return o.y; }))
+	rxmax = Math.max.apply(this,$.map(curve, function(o){ return o.x; }))
+	rymin = Math.min.apply(this,$.map(curve, function(o){ return o.y; }))
+	
+	ymax = ctx.canvas.height-50
+	xmin = 75
+
+	xmax = xmin+(6*ppi)
+	ymin = ymax-(8*ppi)
+
+}
+else if ((document.getElementById("workarea").checked==true) && (smooth.length>1)){
+
+	ymax = ctx.canvas.height-50
+	xmin = 75
+
+	xmax = xmin+(6*ppi)
+	ymin = ymax-(8*ppi)
+}
+else if ((document.getElementById("workarea").checked==false) && (smooth.length>0)){
+	xmin = rxmin
+	xmax = rxmax
+	ymin = rymin
+	ymax = rymax
+}
+}
 
 function toggle() {
 
