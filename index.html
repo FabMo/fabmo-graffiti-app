@@ -6,17 +6,14 @@
 <link rel="stylesheet" href="css/jquery.mobile-1.4.5.css">
 
 <script src="js/jquery-1.11.2.min.js"></script>
-<script src="js/libs/fabmo.js"></script>
+<script src="js/libs/fabmo.min.js"></script>
 <script src="js/simplify.js"></script>
 <script src="js/jquery.mousewheel.min.js"></script>
 <script src="js/snap.svg-min.js"></script>
-    <script type="text/javascript">
-        var fabmo = new FabMoDashboard();
-    </script>
 <script>
 $(document).on("mobileinit", function() {
 	console.log("mobileinit")
-});
+})
 </script>
 
 <script src="js/jquery.mobile-1.4.5.js"></script>
@@ -38,7 +35,7 @@ canvas{
 
 </head>
 
-<body onload="draw();">
+<body onload="draw()">
 
 <canvas id="myCanvas"></canvas>
 
@@ -88,6 +85,8 @@ canvas{
 
 //TODO
 //
+
+var fabmo = new FabMoDashboard()
 
 var g = ""
 var points = []
@@ -388,8 +387,8 @@ $("#myCanvas").bind('mousewheel',function(e){
 
 $("#myCanvas").bind('vmousedown', function(e) {
     if ($('.inputContainer').data('open')== 'true'){    
-        $('.inputContainer').css('right', '-1000px');
-        $('.inputContainer').data('open', 'false');
+        $('.inputContainer').css('right', '-1000px')
+        $('.inputContainer').data('open', 'false')
    }
 
 	ctx.beginPath();
@@ -559,10 +558,10 @@ ctx.stroke()
 
 	ctx.fillStyle='#aaa'
 	ctx.font = "14px Arial";
-	ctx.fillText((((xmax-xmin)/dpi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	ctx.fillText((((ymax-ymin)/dpi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
-	//ctx.fillText("6\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	//ctx.fillText("8\"",(xmin)-60,ymax-(ymax-ymin)/2);
+	ctx.fillText((((xmax-xmin)/dpi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30)
+	ctx.fillText((((ymax-ymin)/dpi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2)
+	//ctx.fillText("6\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30)
+	//ctx.fillText("8\"",(xmin)-60,ymax-(ymax-ymin)/2)
 
 //}
 
@@ -672,8 +671,8 @@ if((document.getElementById("workarea").checked==false)){
 	ctx.fillStyle='#aaa'
 	ctx.font = "14px Arial"
 
-	ctx.fillText("6\"",($(window).width()/2),$(window).height()-30)
-	ctx.fillText("8\"",60,$(window).height()/2)
+	//ctx.fillText("6\"",($(window).width()/2),$(window).height()-30)
+	//ctx.fillText("8\"",60,$(window).height()/2)
 
 }
 
@@ -780,11 +779,11 @@ g=""
 
 $('.menu-icon').click(function(){
     if ($('.inputContainer').data('open')== 'true'){
-        $('.inputContainer').css('right', '-1000px');
-        $('.inputContainer').data('open', 'false');
+        $('.inputContainer').css('right', '-1000px')
+        $('.inputContainer').data('open', 'false')
     } else {
-        $('.inputContainer').css('right', '10px');
-        $('.inputContainer').data('open', 'true');
+        $('.inputContainer').css('right', '10px')
+        $('.inputContainer').data('open', 'true')
     }
 });
 
@@ -837,27 +836,6 @@ else if ((document.getElementById("workarea").checked==false) && (smooth.length>
 	}
 }
 
-
-function toggleFullScreen() {
-  if (!document.fullscreenElement &&    // alternative standard method
-      !document.mozFullScreenElement && !document.webkitFullscreenElement) {  // current working methods
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-      document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    }
-  } else {
-    if (document.cancelFullScreen) {
-      document.cancelFullScreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitCancelFullScreen) {
-      document.webkitCancelFullScreen();
-    }
-  }
-}
 
 </script>
 
