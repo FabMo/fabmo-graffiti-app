@@ -44,7 +44,7 @@ canvas{
 
 
 <div class='submitContainer'>
-    <input id="input_submit" type="button" value="SUBMIT JOB" onclick="make()"/>
+    <input id="input_submit" type="button" value="MAKE" onclick="make()"/>
 </div>
 <img class="menu-icon" src="css/menu.png">
 <div class="inputContainer">
@@ -88,26 +88,6 @@ canvas{
 
 //TODO
 //
-//
-//graffiti cad
-//simplify geometry
-//multi finger polygon
-
-//cutout option
-//rotate canvas 8x6 (on orientation change?)
-//arc corners
-//two finger move
-//multi finger touch brush select
-//menu instructions help?
-//two finger tap display work area
-//pinch zoom
-//pattern array
-//pockets
-//fills
-//gradient
-//
-
-//var scale when drawn
 
 var g = ""
 var points = []
@@ -532,30 +512,31 @@ ctx.strokeStyle = "#ccc"
 
 //grid
 
-if(document.getElementById("workarea").checked==true){
+//if(document.getElementById("workarea").checked==true){
 	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
 	for(i=0;i<=6;i++){
-		ctx.moveTo(xmin+ppi*i,ymax)
-		ctx.lineTo(xmin+ppi*i,ymin)
+		//ctx.moveTo(xmin+ppi*i,ymax)
+		//ctx.lineTo(xmin+ppi*i,ymin)
 	}
 	for(i=0;i<=8;i++){
-		ctx.moveTo(xmin,ymin+ppi*i)
-		ctx.lineTo(xmax,ymin+ppi*i)
+		//ctx.moveTo(xmin,ymin+ppi*i)
+		//ctx.lineTo(xmax,ymin+ppi*i)
 	}
-}
-else{
+//}
+//else{
 
-	if((document.getElementById("workarea").checked==false) && (xmin >=0)){
+	//if((document.getElementById("workarea").checked==false) && (xmin >=0)){
 
-	}
-	else{
-	ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
-	}
-}
+	//}
+	//else{
+	//ctx.rect(xmin,ymin,xmax-xmin,ymax-ymin)
+	//}
+//}
 ctx.fill()
 ctx.stroke()
 	
-if(document.getElementById("workarea").checked==true){
+//if(document.getElementById("workarea").checked==true){	
+
 	ctx.lineWidth = 3
 	ctx.strokeStyle = "#fff"
 	ctx.beginPath()
@@ -574,15 +555,16 @@ if(document.getElementById("workarea").checked==true){
 	ctx.lineTo(xmin,ymax+5)
 	ctx.stroke()
 
+	
+
 	ctx.fillStyle='#aaa'
 	ctx.font = "14px Arial";
-	//ctx.fillText((((xmax-xmin)/dpi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	//ctx.fillText((((ymax-ymin)/dpi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
-	ctx.fillText("6\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
-	ctx.fillText("8\"",(xmin)-60,ymax-(ymax-ymin)/2);
+	ctx.fillText((((xmax-xmin)/dpi)).toFixed(2) + "\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	ctx.fillText((((ymax-ymin)/dpi)).toFixed(2) + "\"",(xmin)-60,ymax-(ymax-ymin)/2);
+	//ctx.fillText("6\"",(xmax)-((xmax-xmin)*0.5)-10,ymax+30);
+	//ctx.fillText("8\"",(xmin)-60,ymax-(ymax-ymin)/2);
 
-
-}
+//}
 
 
 //
